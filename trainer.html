@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="Toddler sleep trainer display">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/day.png">
+  <link rel="apple-touch-icon" href="images/day.png">
+  <title>Sleep Trainer</title>
+  <link rel="stylesheet" href="css/trainer.css">
+</head>
+<body>
+  <div class="trainer" id="trainer">
+    <div class="layer" id="layer-night"></div>
+    <div class="layer" id="layer-dawn"></div>
+    <div class="layer" id="layer-day"></div>
+    <div class="sun" id="sun" aria-hidden="true"></div>
+  </div>
+  <div class="preview-badge" id="preview-badge" hidden></div>
+
+  <script type="module" src="js/trainer.js"></script>
+</body>
+</html>
