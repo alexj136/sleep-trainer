@@ -11,7 +11,6 @@ const layers = {
   day: document.getElementById('layer-day'),
 };
 
-const sun = document.getElementById('sun');
 const previewBadge = document.getElementById('preview-badge');
 
 function setImages() {
@@ -27,25 +26,14 @@ function applyScene(scene, progress) {
     layers.night.style.opacity = '1';
     layers.dawn.style.opacity = '0';
     layers.day.style.opacity = '0';
-    sun.style.opacity = '0';
   } else if (scene === 'sunrise') {
-    // Early sunrise: fade night → dawn; late: dawn fully visible, sun rises
-    const fadeIn = Math.min(1, progress * 2.5);
-    layers.night.style.opacity = String(1 - fadeIn);
-    layers.dawn.style.opacity = String(fadeIn);
+    layers.night.style.opacity = String(1 - progress);
+    layers.dawn.style.opacity = String(progress);
     layers.day.style.opacity = '0';
-
-    const sunProgress = Math.max(0, (progress - 0.15) / 0.85);
-    const sunY = 55 - sunProgress * 45; // % from bottom
-    sun.style.opacity = String(Math.min(1, progress * 3));
-    sun.style.bottom = `${sunY}%`;
-    layers.dawn.style.transform = `translateY(${(1 - sunProgress) * 4}%)`;
   } else {
     layers.night.style.opacity = '0';
     layers.dawn.style.opacity = '0';
     layers.day.style.opacity = '1';
-    sun.style.opacity = '0';
-    layers.dawn.style.transform = '';
   }
 }
 
@@ -83,10 +71,44 @@ function scheduleTick() {
   }, msToNextMinute);
 }
 
+let wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch {
+    wakeLock = null;
+  }
+}
+
+async function requestFullscreen() {
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!fn || document.fullscreenElement || document.webkitFullscreenElement) return;
+  try {
+    await fn.call(el);
+  } catch {
+    // Browsers may require a user gesture — retried on first touch below.
+  }
+}
+
+function engageDisplay() {
+  requestFullscreen();
+  requestWakeLock();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+
+document.addEventListener('pointerdown', engageDisplay, { once: true });
+
 setImages();
 scheduleTick();
+engageDisplay();
 
-// PWA service worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
