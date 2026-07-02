@@ -1,0 +1,9 @@
+#!/bin/sh
+# Refresh deploy timestamp before each commit.
+ROOT=$(git rev-parse --show-toplevel)
+DATE=$(date -Iseconds)
+cat > "$ROOT/js/version.js" <<EOF
+/** Updated automatically on each commit — do not edit by hand. */
+export const COMMITTED_AT = '$DATE';
+EOF
+git add "$ROOT/js/version.js"

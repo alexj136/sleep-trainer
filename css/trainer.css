@@ -20,7 +20,6 @@ body {
   background-size: cover;
   background-position: center bottom;
   background-repeat: no-repeat;
-  transition: opacity 1.5s ease;
 }
 
 #layer-night { z-index: 1; }

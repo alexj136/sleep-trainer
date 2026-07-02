@@ -25,8 +25,8 @@
 
       <div class="field">
         <label for="sunrise">Sunrise duration (minutes)</label>
-        <input type="number" id="sunrise" name="sunrise" value="30" min="1" max="120" required>
-        <p class="hint">Gradual sunrise before wake time</p>
+        <input type="number" id="sunrise" name="sunrise" value="30" min="0" max="120" required>
+        <p class="hint">Minutes to show dawn before wake time (0 = night until wake)</p>
       </div>
 
       <div class="field">
@@ -41,6 +41,8 @@
       <p>Trainer URL</p>
       <a id="url-output" href="trainer.html?wake=07:00&sunrise=30&theme=classic"></a>
     </div>
+
+    <p class="build-time" id="build-time" hidden></p>
   </main>
 
   <script type="module" src="js/index.js"></script>

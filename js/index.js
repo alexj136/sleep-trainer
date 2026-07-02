@@ -1,4 +1,5 @@
 import { THEMES, parseIndexForm, buildTrainerUrl } from './config.js';
+import { COMMITTED_AT } from './version.js';
 
 const form = document.getElementById('config-form');
 const themeSelect = document.getElementById('theme');
@@ -36,6 +37,13 @@ form.addEventListener('submit', (e) => {
 });
 
 updateUrl();
+
+const buildTime = document.getElementById('build-time');
+if (buildTime && COMMITTED_AT) {
+  const when = new Date(COMMITTED_AT);
+  buildTime.textContent = `Deployed commit: ${when.toLocaleString()}`;
+  buildTime.hidden = false;
+}
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});

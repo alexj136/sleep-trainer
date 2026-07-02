@@ -93,3 +93,10 @@ body {
   font-size: 0.7rem;
   word-break: break-all;
 }
+
+.build-time {
+  margin-top: 1.25rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: center;
+}

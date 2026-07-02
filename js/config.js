@@ -12,7 +12,7 @@ const DEFAULTS = { wake: '07:00', sunrise: 30, theme: 'classic' };
 export function parseTrainerParams(search = location.search) {
   const p = new URLSearchParams(search);
   const wake = p.get('wake') || DEFAULTS.wake;
-  const sunrise = Math.max(1, parseInt(p.get('sunrise') || DEFAULTS.sunrise, 10) || DEFAULTS.sunrise);
+  const sunrise = Math.max(0, parseInt(p.get('sunrise') || DEFAULTS.sunrise, 10) || DEFAULTS.sunrise);
   const theme = THEMES[p.get('theme')] ? p.get('theme') : DEFAULTS.theme;
   const preview = p.get('preview') || null;
   return { wake, sunrise, theme, preview };
