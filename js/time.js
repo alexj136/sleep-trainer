@@ -8,21 +8,29 @@ export function todayAt(clock, now = new Date()) {
   return d;
 }
 
+/** Today's wake, or tomorrow's if today's has already passed. */
+function cycleTimes(wake, sunriseMinutes, now = new Date()) {
+  let wakeDate = todayAt(wake, now);
+  if (now.getTime() >= wakeDate.getTime()) {
+    wakeDate = new Date(wakeDate);
+    wakeDate.setDate(wakeDate.getDate() + 1);
+  }
+  const dawn = sunriseMinutes > 0
+    ? new Date(wakeDate.getTime() - sunriseMinutes * 60_000)
+    : null;
+  return { wakeDate, dawn };
+}
+
 /**
  * Scene for the current moment.
  * @returns {'night'|'dawn'|'day'}
  */
 export function getScene(wake, sunriseMinutes, now = new Date()) {
-  const wakeDate = todayAt(wake, now);
+  const { wakeDate, dawn } = cycleTimes(wake, sunriseMinutes, now);
   const t = now.getTime();
 
   if (t >= wakeDate.getTime()) return 'day';
-
-  if (sunriseMinutes > 0) {
-    const dawn = new Date(wakeDate.getTime() - sunriseMinutes * 60_000);
-    if (t >= dawn.getTime()) return 'dawn';
-  }
-
+  if (dawn && t >= dawn.getTime()) return 'dawn';
   return 'night';
 }
 
@@ -32,15 +40,10 @@ export function getScene(wake, sunriseMinutes, now = new Date()) {
  */
 export function getNextTransition(wake, sunriseMinutes, now = new Date()) {
   const scene = getScene(wake, sunriseMinutes, now);
-  const wakeDate = todayAt(wake, now);
+  const { wakeDate, dawn } = cycleTimes(wake, sunriseMinutes, now);
 
   if (scene === 'night') {
-    if (sunriseMinutes > 0) {
-      return {
-        at: new Date(wakeDate.getTime() - sunriseMinutes * 60_000),
-        scene: 'dawn',
-      };
-    }
+    if (dawn) return { at: dawn, scene: 'dawn' };
     return { at: wakeDate, scene: 'day' };
   }
 
