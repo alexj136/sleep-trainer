@@ -1,5 +1,5 @@
 import { parseTrainerParams, THEMES } from './config.js';
-import { getScene, getNextTransition, resolvePreview } from './time.js';
+import { nextTimes, sceneAt, resolvePreview } from './time.js';
 import { initDisplay } from './display.js';
 
 const params = parseTrainerParams();
@@ -13,7 +13,10 @@ const layers = {
 };
 
 const previewBadge = document.getElementById('preview-badge');
-let transitionTimer = null;
+let timer = null;
+let done = false;
+let dawnAt = null;
+let wakeAt = null;
 
 function setImages() {
   layers.night.style.backgroundImage = `url(${theme.images.night})`;
@@ -28,63 +31,74 @@ function applyScene(scene) {
   layers.day.style.opacity = scene === 'day' ? '1' : '0';
 }
 
-function currentScene() {
-  const { now, forceScene } = resolvePreview(params.preview);
-
-  if (forceScene) return { scene: forceScene, now, scheduled: false };
-  return {
-    scene: getScene(params.wake, params.sunrise, now),
-    now,
-    scheduled: !params.preview,
-  };
-}
-
-function updatePreviewBadge(scene, now) {
-  if (!params.preview) return;
-  previewBadge.hidden = false;
-  const label = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  previewBadge.textContent = `Preview · ${label} · ${scene}`;
-}
-
-function clearTransitionTimer() {
-  if (transitionTimer !== null) {
-    clearTimeout(transitionTimer);
-    transitionTimer = null;
+function clearTimer() {
+  if (timer !== null) {
+    clearTimeout(timer);
+    timer = null;
   }
 }
 
-function scheduleNextTransition() {
-  clearTransitionTimer();
+function showDay() {
+  applyScene('day');
+  done = true;
+  clearTimer();
+}
 
-  const { scene, now, scheduled } = currentScene();
-  applyScene(scene);
-  updatePreviewBadge(scene, now);
+function start() {
+  if (done) return;
 
-  if (!scheduled) return;
+  clearTimer();
+  ({ dawnAt, wakeAt } = nextTimes(params.wake, params.sunrise, new Date()));
+  const now = Date.now();
 
-  const next = getNextTransition(params.wake, params.sunrise, now);
-  if (!next) return;
-
-  const delay = next.at.getTime() - Date.now();
-  if (delay <= 0) {
-    applyScene(next.scene);
-    scheduleNextTransition();
+  if (now >= wakeAt.getTime()) {
+    showDay();
     return;
   }
 
-  transitionTimer = setTimeout(() => {
-    applyScene(next.scene);
-    scheduleNextTransition();
-  }, delay);
+  applyScene('night');
+
+  if (dawnAt && now >= dawnAt.getTime()) {
+    applyScene('dawn');
+    timer = setTimeout(showDay, wakeAt.getTime() - now);
+    return;
+  }
+
+  if (!dawnAt) {
+    timer = setTimeout(showDay, wakeAt.getTime() - now);
+    return;
+  }
+
+  timer = setTimeout(() => {
+    applyScene('dawn');
+    timer = setTimeout(showDay, wakeAt.getTime() - dawnAt.getTime());
+  }, dawnAt.getTime() - now);
+}
+
+function catchUp() {
+  if (done || params.preview) return;
+
+  const now = Date.now();
+  if (now >= wakeAt.getTime()) {
+    showDay();
+    return;
+  }
+  if (dawnAt && now >= dawnAt.getTime()) {
+    applyScene('dawn');
+    clearTimer();
+    timer = setTimeout(showDay, wakeAt.getTime() - now);
+    return;
+  }
+  start();
 }
 
 initDisplay();
 setImages();
-scheduleNextTransition();
+start();
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
-    scheduleNextTransition();
+    catchUp();
   }
 });
 

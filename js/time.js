@@ -8,50 +8,43 @@ export function todayAt(clock, now = new Date()) {
   return d;
 }
 
-/** Today's wake, or tomorrow's if today's has already passed. */
-function cycleTimes(wake, sunriseMinutes, now = new Date()) {
-  let wakeDate = todayAt(wake, now);
-  if (now.getTime() >= wakeDate.getTime()) {
-    wakeDate = new Date(wakeDate);
-    wakeDate.setDate(wakeDate.getDate() + 1);
+/**
+ * Next dawn (X−Y) and wake (X) — computed once per page load.
+ * If today's wake is still ahead, uses today even when dawn has already started.
+ */
+export function nextTimes(wake, sunriseMinutes, now = new Date()) {
+  let wakeAt = todayAt(wake, now);
+
+  if (sunriseMinutes > 0 && now.getTime() < wakeAt.getTime()) {
+    return {
+      dawnAt: new Date(wakeAt.getTime() - sunriseMinutes * 60_000),
+      wakeAt,
+    };
   }
-  const dawn = sunriseMinutes > 0
-    ? new Date(wakeDate.getTime() - sunriseMinutes * 60_000)
-    : null;
-  return { wakeDate, dawn };
+
+  while (wakeAt.getTime() <= now.getTime()) {
+    wakeAt = new Date(wakeAt);
+    wakeAt.setDate(wakeAt.getDate() + 1);
+  }
+
+  return {
+    dawnAt: sunriseMinutes > 0
+      ? new Date(wakeAt.getTime() - sunriseMinutes * 60_000)
+      : null,
+    wakeAt,
+  };
 }
 
-/**
- * Scene for the current moment.
- * @returns {'night'|'dawn'|'day'}
- */
-export function getScene(wake, sunriseMinutes, now = new Date()) {
-  const { wakeDate, dawn } = cycleTimes(wake, sunriseMinutes, now);
-  const t = now.getTime();
-
-  if (t >= wakeDate.getTime()) return 'day';
-  if (dawn && t >= dawn.getTime()) return 'dawn';
+/** For preview only — scene at an arbitrary moment. */
+export function sceneAt(wake, sunriseMinutes, when) {
+  const wakeAt = todayAt(wake, when);
+  const t = when.getTime();
+  if (t >= wakeAt.getTime()) return 'day';
+  if (sunriseMinutes > 0) {
+    const dawnAt = new Date(wakeAt.getTime() - sunriseMinutes * 60_000);
+    if (t >= dawnAt.getTime()) return 'dawn';
+  }
   return 'night';
-}
-
-/**
- * Next transition, if any. Returns null once day is reached.
- * @returns {{ at: Date, scene: 'dawn'|'day' } | null}
- */
-export function getNextTransition(wake, sunriseMinutes, now = new Date()) {
-  const scene = getScene(wake, sunriseMinutes, now);
-  const { wakeDate, dawn } = cycleTimes(wake, sunriseMinutes, now);
-
-  if (scene === 'night') {
-    if (dawn) return { at: dawn, scene: 'dawn' };
-    return { at: wakeDate, scene: 'day' };
-  }
-
-  if (scene === 'dawn') {
-    return { at: wakeDate, scene: 'day' };
-  }
-
-  return null;
 }
 
 /** preview: HH:MM | 'night' | 'sunrise' | 'dawn' | 'day' */
