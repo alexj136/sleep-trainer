@@ -29,11 +29,7 @@ function applyScene(scene) {
 }
 
 function currentScene() {
-  const { now, forceScene } = resolvePreview(
-    params.preview,
-    params.wake,
-    params.sunrise,
-  );
+  const { now, forceScene } = resolvePreview(params.preview);
 
   if (forceScene) return { scene: forceScene, now, scheduled: false };
   return {
@@ -66,17 +62,18 @@ function scheduleNextTransition() {
 
   if (!scheduled) return;
 
-  const { at, scene: nextScene } = getNextTransition(params.wake, params.sunrise, now);
-  const delay = at.getTime() - Date.now();
+  const next = getNextTransition(params.wake, params.sunrise, now);
+  if (!next) return;
 
+  const delay = next.at.getTime() - Date.now();
   if (delay <= 0) {
-    applyScene(nextScene);
+    applyScene(next.scene);
     scheduleNextTransition();
     return;
   }
 
   transitionTimer = setTimeout(() => {
-    applyScene(nextScene);
+    applyScene(next.scene);
     scheduleNextTransition();
   }, delay);
 }
