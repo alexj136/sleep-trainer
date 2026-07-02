@@ -1,5 +1,6 @@
 import { parseTrainerParams, THEMES } from './config.js';
 import { getScene, resolvePreview } from './time.js';
+import { initDisplay } from './display.js';
 
 const params = parseTrainerParams();
 const theme = THEMES[params.theme];
@@ -71,43 +72,9 @@ function scheduleTick() {
   }, msToNextMinute);
 }
 
-let wakeLock = null;
-
-async function requestWakeLock() {
-  if (!('wakeLock' in navigator)) return;
-  try {
-    wakeLock = await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', () => { wakeLock = null; });
-  } catch {
-    wakeLock = null;
-  }
-}
-
-async function requestFullscreen() {
-  const el = document.documentElement;
-  const fn = el.requestFullscreen || el.webkitRequestFullscreen;
-  if (!fn || document.fullscreenElement || document.webkitFullscreenElement) return;
-  try {
-    await fn.call(el);
-  } catch {
-    // Browsers may require a user gesture — retried on first touch below.
-  }
-}
-
-function engageDisplay() {
-  requestFullscreen();
-  requestWakeLock();
-}
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') requestWakeLock();
-});
-
-document.addEventListener('pointerdown', engageDisplay, { once: true });
-
+initDisplay();
 setImages();
 scheduleTick();
-engageDisplay();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});

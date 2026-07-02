@@ -3,7 +3,7 @@
   "short_name": "Sleep Trainer",
   "description": "A gentle toddler sleep trainer for an old phone",
   "start_url": "./index.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0a0e1a",
   "theme_color": "#0a0e1a",

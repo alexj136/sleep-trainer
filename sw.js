@@ -1,4 +1,4 @@
-const CACHE = 'sleep-trainer-v1';
+const CACHE = 'sleep-trainer-v3';
 const ASSETS = [
   'index.html',
   'trainer.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   'css/trainer.css',
   'js/config.js',
   'js/time.js',
+  'js/display.js',
   'js/index.js',
   'js/trainer.js',
   'images/night.png',
