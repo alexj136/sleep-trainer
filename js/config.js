@@ -3,7 +3,19 @@
 export const THEMES = {
   classic: {
     label: 'Classic cottage',
-    images: { night: 'images/night.png', dawn: 'images/dawn.png', day: 'images/day.png' },
+    images: {
+      night: 'images/cottage/night.png',
+      dawn: 'images/cottage/dawn.png',
+      day: 'images/cottage/day.png'
+    },
+  },
+  pixel_cat: {
+    label: 'Pixel cat',
+    images: {
+      night: 'images/cat/night.png',
+      dawn: 'images/cat/dawn.png',
+      day: 'images/cat/day.png'
+    },
   },
 };
 

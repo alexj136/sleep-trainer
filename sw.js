@@ -12,9 +12,9 @@ const ASSETS = [
   'js/version.js',
   'js/index.js',
   'js/trainer.js',
-  'images/night.png',
-  'images/dawn.png',
-  'images/day.png',
+  'images/cottage/night.png',
+  'images/cottage/dawn.png',
+  'images/cottage/day.png',
 ];
 
 self.addEventListener('install', (e) => {
