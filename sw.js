@@ -1,4 +1,4 @@
-const CACHE = 'sleep-trainer-v9';
+const CACHE = 'sleep-trainer-v10';
 const ASSETS = [
   'index.html',
   'trainer.html',
@@ -15,6 +15,9 @@ const ASSETS = [
   'images/cottage/night.png',
   'images/cottage/dawn.png',
   'images/cottage/day.png',
+  'images/cat/night.png',
+  'images/cat/dawn.png',
+  'images/cat/day.png',
 ];
 
 self.addEventListener('install', (e) => {

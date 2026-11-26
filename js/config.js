@@ -19,7 +19,7 @@ export const THEMES = {
   },
 };
 
-const DEFAULTS = { wake: '07:00', sunrise: 30, theme: 'classic' };
+const DEFAULTS = { wake: '06:30', sunrise: 1, theme: 'pixel_cat' };
 
 export function parseTrainerParams(search = location.search) {
   const p = new URLSearchParams(search);
