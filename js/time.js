@@ -9,42 +9,50 @@ export function todayAt(clock, now = new Date()) {
 }
 
 /**
- * Next dawn (X−Y) and wake (X) — computed once per page load.
- * If today's wake is still ahead, uses today even when dawn has already started.
+ * HH:MM minus offsetMinutes, on the nearest day that satisfies `ok`, searching
+ * in direction `step` (-1 = latest past occurrence, +1 = soonest future one).
  */
-export function nextTimes(wake, sunriseMinutes, now = new Date()) {
-  let wakeAt = todayAt(wake, now);
-
-  if (sunriseMinutes > 0 && now.getTime() < wakeAt.getTime()) {
-    return {
-      dawnAt: new Date(wakeAt.getTime() - sunriseMinutes * 60_000),
-      wakeAt,
-    };
-  }
-
-  while (wakeAt.getTime() <= now.getTime()) {
-    wakeAt = new Date(wakeAt);
-    wakeAt.setDate(wakeAt.getDate() + 1);
-  }
-
-  return {
-    dawnAt: sunriseMinutes > 0
-      ? new Date(wakeAt.getTime() - sunriseMinutes * 60_000)
-      : null,
-    wakeAt,
-  };
+function occurrence(clock, offsetMinutes, now, step, ok) {
+  const d = todayAt(clock, now);
+  d.setMinutes(d.getMinutes() - offsetMinutes);
+  // Step whole calendar days so the wall-clock time survives DST changes.
+  // First overshoot to the far side, then walk back to the nearest match.
+  while (ok(d)) d.setDate(d.getDate() - step);
+  while (!ok(d)) d.setDate(d.getDate() + step);
+  return d;
 }
 
-/** For preview only — scene at an arbitrary moment. */
-export function sceneAt(wake, sunriseMinutes, when) {
-  const wakeAt = todayAt(wake, when);
-  const t = when.getTime();
-  if (t >= wakeAt.getTime()) return 'day';
-  if (sunriseMinutes > 0) {
-    const dawnAt = new Date(wakeAt.getTime() - sunriseMinutes * 60_000);
-    if (t >= dawnAt.getTime()) return 'dawn';
+/**
+ * The daily cycle as [scene, clock, offsetMinutes]: dawn starts `sunrise`
+ * minutes before wake, day at wake, night at sunset. Dawn is skipped when
+ * sunrise is 0. Order matters: if two boundaries coincide, the later one wins.
+ */
+function boundaries({ wake, sunrise, sunset }) {
+  const list = [];
+  if (sunrise > 0) list.push(['dawn', wake, sunrise]);
+  list.push(['day', wake, 0], ['night', sunset, 0]);
+  return list;
+}
+
+/** Scene showing at `now`: whichever boundary happened most recently. */
+export function sceneAt(cfg, now = new Date()) {
+  let best = null;
+  let bestAt = -Infinity;
+  for (const [scene, clock, offset] of boundaries(cfg)) {
+    const at = occurrence(clock, offset, now, -1, (d) => d <= now).getTime();
+    if (at >= bestAt) { best = scene; bestAt = at; }
   }
-  return 'night';
+  return best;
+}
+
+/** When the scene next changes (strictly after `now`). */
+export function nextChangeAt(cfg, now = new Date()) {
+  let soonest = Infinity;
+  for (const [, clock, offset] of boundaries(cfg)) {
+    const at = occurrence(clock, offset, now, 1, (d) => d > now).getTime();
+    soonest = Math.min(soonest, at);
+  }
+  return new Date(soonest);
 }
 
 /** preview: HH:MM | 'night' | 'sunrise' | 'dawn' | 'day' */

@@ -1,5 +1,5 @@
 import { parseTrainerParams, THEMES } from './config.js';
-import { nextTimes, sceneAt, resolvePreview } from './time.js';
+import { sceneAt, nextChangeAt } from './time.js';
 import { initDisplay } from './display.js';
 
 const params = parseTrainerParams();
@@ -14,9 +14,10 @@ const layers = {
 
 const previewBadge = document.getElementById('preview-badge');
 let timer = null;
-let done = false;
-let dawnAt = null;
-let wakeAt = null;
+
+// Never sleep longer than this between checks, so a throttled or frozen
+// timer (phone sleep, clock change) can only delay a scene change briefly.
+const MAX_WAIT_MS = 60_000;
 
 function setImages() {
   layers.night.style.backgroundImage = `url(${theme.images.night})`;
@@ -38,69 +39,29 @@ function clearTimer() {
   }
 }
 
-function showDay() {
-  applyScene('day');
-  done = true;
+/** Show the right scene for now, then check again at the next change. */
+function tick() {
   clearTimer();
+  const now = new Date();
+  applyScene(sceneAt(params, now));
+  const wait = Math.min(nextChangeAt(params, now) - now, MAX_WAIT_MS);
+  timer = setTimeout(tick, wait);
 }
 
-function start() {
-  if (done) return;
+if (params.errors.length) {
+  // Bad settings: go back to the settings page, which shows what's wrong.
+  location.replace(`index.html${location.search}`);
+} else {
+  initDisplay();
+  setImages();
+  tick();
 
-  clearTimer();
-  ({ dawnAt, wakeAt } = nextTimes(params.wake, params.sunrise, new Date()));
-  const now = Date.now();
-
-  if (now >= wakeAt.getTime()) {
-    showDay();
-    return;
-  }
-
-  applyScene('night');
-
-  if (dawnAt && now >= dawnAt.getTime()) {
-    applyScene('dawn');
-    timer = setTimeout(showDay, wakeAt.getTime() - now);
-    return;
-  }
-
-  if (!dawnAt) {
-    timer = setTimeout(showDay, wakeAt.getTime() - now);
-    return;
-  }
-
-  timer = setTimeout(() => {
-    applyScene('dawn');
-    timer = setTimeout(showDay, wakeAt.getTime() - dawnAt.getTime());
-  }, dawnAt.getTime() - now);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      tick();
+    }
+  });
 }
-
-function catchUp() {
-  if (done || params.preview) return;
-
-  const now = Date.now();
-  if (now >= wakeAt.getTime()) {
-    showDay();
-    return;
-  }
-  if (dawnAt && now >= dawnAt.getTime()) {
-    applyScene('dawn');
-    clearTimer();
-    timer = setTimeout(showDay, wakeAt.getTime() - now);
-    return;
-  }
-  start();
-}
-
-initDisplay();
-setImages();
-start();
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    catchUp();
-  }
-});
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});

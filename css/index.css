@@ -28,6 +28,24 @@ body {
   margin-bottom: 1.75rem;
 }
 
+.errors {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.errors ul {
+  margin: 0.4rem 0 0 1.1rem;
+}
+
+.errors[hidden] {
+  display: none;
+}
+
 .field {
   margin-bottom: 1.25rem;
 }

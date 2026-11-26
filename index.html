@@ -16,6 +16,8 @@
     <h1>Sleep Trainer</h1>
     <p class="subtitle">Turn an old phone into a gentle wake-up clock.</p>
 
+    <div class="errors" id="errors" role="alert" hidden></div>
+
     <form id="config-form">
       <div class="field">
         <label for="wake">Wake time</label>
@@ -26,7 +28,13 @@
       <div class="field">
         <label for="sunrise">Sunrise duration (minutes)</label>
         <input type="number" id="sunrise" name="sunrise" value="1" min="0" max="120" required>
-        <p class="hint">Minutes to show dawn before wake time (0 = night until wake)</p>
+        <p class="hint">Minutes to show dawn before wake time (0 = straight from night to day)</p>
+      </div>
+
+      <div class="field">
+        <label for="sunset">Sunset time</label>
+        <input type="time" id="sunset" name="sunset" value="18:15" required>
+        <p class="hint">When the night image comes back on; the cycle then repeats every day</p>
       </div>
 
       <div class="field">
@@ -39,7 +47,7 @@
 
     <div class="url-preview">
       <p>Trainer URL</p>
-      <a id="url-output" href="trainer.html?wake=06:30&sunrise=1&theme=pixel_cat"></a>
+      <a id="url-output" href="trainer.html?wake=06%3A30&sunrise=1&sunset=18%3A15&theme=pixel_cat"></a>
     </div>
 
     <p class="build-time" id="build-time" hidden></p>
